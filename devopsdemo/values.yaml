@@ -41,7 +41,7 @@ securityContext: {}
 
 service:
   type: LoadBalancer
-  port: 80
+  port: 3000
 
 ingress:
   enabled: false
@@ -74,11 +74,11 @@ resources: {}
 livenessProbe:
   httpGet:
     path: /
-    port: http
+    port: 3000
 readinessProbe:
   httpGet:
     path: /
-    port: http
+    port: 3000
 
 autoscaling:
   enabled: false
