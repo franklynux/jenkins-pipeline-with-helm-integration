@@ -8,26 +8,26 @@ pipeline {
         KUBECONFIG = "${env.WORKSPACE}/.kube/config"
         CHART_DIR = "devopsdemo"
     }
-    
-    stage('Debug Environment') {
-        steps {
-            sh '''
-            echo "AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION"
-            echo "CLUSTER_NAME: $CLUSTER_NAME"
-            echo "WORKSPACE: $WORKSPACE"
-            echo "KUBECONFIG: $KUBECONFIG"
-            echo "CHART_DIR: $CHART_DIR"
-            '''
-         }
-    }
 
     stages {
+        stage('Debug Environment') {
+            steps {
+                sh '''
+                echo "AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION"
+                echo "CLUSTER_NAME: $CLUSTER_NAME"
+                echo "WORKSPACE: $WORKSPACE"
+                echo "KUBECONFIG: $KUBECONFIG"
+                echo "CHART_DIR: $CHART_DIR"
+                '''
+            }
+        }
+
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/franklynux/jenkins-pipeline-with-helm-integration.git'
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
                 script {
@@ -47,26 +47,27 @@ pipeline {
         }
 
         stage('Verify AWS Credentials') {
-           steps {
-              withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                  sh 'aws sts get-caller-identity'
-              }
-           }
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    sh 'aws sts get-caller-identity'
+                }
+            }
         }
 
         stage('Prepare Kubeconfig Directory') {
-           steps {
-               sh 'mkdir -p ${WORKSPACE}/.kube'
-           }
-       }
+            steps {
+                sh 'mkdir -p ${WORKSPACE}/.kube'
+            }
+        }
 
         stage('Deploy to EKS with Helm') {
             steps {
-               withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                   sh """
-                   aws eks update-kubeconfig --region {$AWS_DEFAULT_REGION} --name {$CLUSTER_NAME}
-                   helm upgrade --install devopsdemo $CHART_DIR --set image.repository=franklynux/devopsdemo,image.tag=${BUILD_NUMBER}
-                   """
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    sh """
+                    aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $CLUSTER_NAME
+                    helm upgrade --install devopsdemo $CHART_DIR --set image.repository=franklynux/devopsdemo,image.tag=${BUILD_NUMBER}
+                    """
+                }
             }
         }
     }
