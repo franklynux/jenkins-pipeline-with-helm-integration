@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
-        CLUSTER_NAME = 'my-capstone-cluster'
-        KUBECONFIG = "$HOME/.kube/config"
-        CHART_DIR = "charts/your-app"
+        CLUSTER_NAME = 'helm-app-cluster'
+        KUBECONFIG = "${env.HOME}/.kube/config"
+        CHART_DIR = "devopsdemo"
     }
 
     stages {
@@ -18,7 +18,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("your-dockerhub-username/your-webapp:${BUILD_NUMBER}")
+                    dockerImage = docker.build("franklynux/devopsdemo:${BUILD_NUMBER}")
                 }
             }
         }
@@ -26,7 +26,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials-id') {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
                         dockerImage.push()
                     }
                 }
@@ -35,10 +35,10 @@ pipeline {
 
         stage('Deploy to EKS with Helm') {
             steps {
-                sh '''
+                sh """
                 aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $CLUSTER_NAME
-                helm upgrade --install your-webapp-release $CHART_DIR --set image.repository=your-dockerhub-username/your-webapp,image.tag=${BUILD_NUMBER}
-                '''
+                helm upgrade --install devopsdemo $CHART_DIR --set image.repository=franklynux/devopsdemo,image.tag=${BUILD_NUMBER}
+                """
             }
         }
     }
