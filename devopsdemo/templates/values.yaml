@@ -8,7 +8,7 @@ image:
   repository: franklynux/devopsdemo
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "6"
 
 imagePullSecrets: []
 nameOverride: ""
