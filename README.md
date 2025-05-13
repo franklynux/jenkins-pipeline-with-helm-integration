@@ -1,4 +1,4 @@
-# Configuration Management With Helm
+# Configuration Management with Helm
 
 ## Project Overview
 
@@ -8,14 +8,18 @@ This project introduces Helm charts and their integration with Jenkins to automa
 
 ## Table of Contents
 
-1. [Prerequisites](#prerequisites)  
-2. [Project Structure](#project-structure)  
-3. [Jenkins Server Setup](#jenkins-server-setup)  
-4. [Helm Chart Basics](#helm-chart-basics)  
-5. [Working with Helm Charts](#working-with-helm-charts)  
-6. [Integrating Helm with Jenkins](#integrating-helm-with-jenkins)  
-7. [Troubleshooting](#troubleshooting)  
-8. [Contributing](#contributing)
+1. [Prerequisites](#prerequisites)
+2. [Project Structure](#project-structure)
+3. [Jenkins Server Setup](#jenkins-server-setup)
+4. [Helm Chart Basics](#helm-chart-basics)
+5. [Working with Helm Charts](#working-with-helm-charts)
+6. [Integrating Helm with Jenkins](#integrating-helm-with-jenkins)
+7. [Accessing the Deployed Application](#7-accessing-the-deployed-application)
+8. [Clean Up Resources](#8-clean-up-resources)
+9. [Troubleshooting](#9-troubleshooting)
+10. [Contributing](#10-contributing)
+11. [License](#11-license)
+12. [Contact](#12-contact)
 
 ---
 
@@ -23,8 +27,10 @@ This project introduces Helm charts and their integration with Jenkins to automa
 
 Before starting, ensure you have the following installed:
 
-- **Operating System**: Windows, Linux, or macOS
-  *Note: This project would run on a dedicated Ubuntu (Linux) `t.3 small` EC2 instance on AWS. The below tools would be installed and configured on the same dedicated server.*
+- **Operating System**: Windows, Linux, or macOS.
+
+  *Note: This project would involve steps to create and deploy a helm chart on Kubernetes using EKS on both a local machine and on a dedicated Ubuntu (Linux) `t.3 small` EC2 instance for the Jenkins Server. The below tools are required to be installed and configured on both environments.*
+  
 - **Jenkins**: Version 2.375 or later
 - **Helm**: Version 3.0 or later
 - **AWS CLI**: Installed and configured
@@ -496,19 +502,61 @@ Helm makes it easy to update your application and revert to previous versions if
 
 ## 6. Integrating Helm with Jenkins
 
-Now, we have successfully deployed a sample web application via helm on a kubernetes cluster (EKS) on a local machine. Next, we would integrate ***Jenkins with Helm*** to create a simplified CI/CD pipeline for application deployment.
+Now, we have successfully deployed a sample web application via helm on a Kubernetes cluster (EKS) on a local machine. Next, we would integrate ***Jenkins with Helm*** to create a simplified CI/CD pipeline for application deployment.
+
+#### Prerequisite: Provision an EKS Cluster with eksctl
+
+Before building your Jenkins pipeline job, you must have a running Kubernetes cluster. If you have not already provisioned one, use the `eksctl` CLI (installed on your Jenkins server) to create an EKS cluster:
+
+```bash
+eksctl create cluster --name helm-app-cluster --region us-east-1 --nodegroup-name helm-workers --node-type t3.small --nodes 2 --nodes-min 1 --nodes-max 3 --managed
+```
+
+- This command creates a managed EKS cluster named `helm-app-cluster` in the `us-east-1` region with a node group called `helm-workers`.
+- The node group uses `t3.small` EC2 instances, with 2 nodes by default (minimum 1, maximum 3).
+- The process may take several minutes to complete.
+
+> **Provisioning Cluster:**  
+> ![Provisioning Cluster](./images/eksctl%20-%20kube%20cluster%20provisioning.png)
+>
+> **Cluster ready:**
+> ![Provisioned Cluster](./images/eksctl%20-%20kube%20cluster%20ready.png)
+
+Once the EKS cluster is ready, you can proceed to build and run your Jenkins pipeline job as described below. The pipeline will deploy your application to the newly created cluster using Helm.
+
+---
 
 ### Steps
 
 #### 4.1 Integrate Jenkins with Helm
 
-Since we have Jenkins installed and configured on a dedicated server ( Ubuntu EC2 instance), to ensure seamless integration and deployment, the following should be installed and configured on the Jenkins server or agent:
+Since we have Jenkins installed and configured on a dedicated server (Ubuntu EC2 instance), to ensure seamless integration and deployment, the following should be installed and configured on the Jenkins server or agent:
 
 - AWS CLI
+- Helm CLI
 - EKS CLI (eksctl)
 - Kubernetes CLI (kubectl)
 - Configured AWS credentials on Jenkins for Kubernetes cluster access.
 - Add Helm commands, and also AWS credentials verification commands in Jenkins pipeline script.
+
+#### Prerequisite: Provision an EKS Cluster with eksctl
+
+Before building your Jenkins pipeline job, you must have a running Kubernetes cluster. If you have not already provisioned one, use the `eksctl` CLI (installed on your Jenkins server) to create an EKS cluster:
+
+```bash
+eksctl create cluster --name helm-app-cluster --region us-east-1 --nodegroup-name helm-workers --node-type t3.small --nodes 2 --nodes-min 1 --nodes-max 3 --managed
+```
+
+- This command creates a managed EKS cluster named `helm-app-cluster` in the `us-east-1` region with a node group called `helm-workers`.
+- The node group uses `t3.small` EC2 instances, with 2 nodes by default (minimum 1, maximum 3).
+- The process may take several minutes to complete.
+
+> **Provisioning Cluster:**  
+> ![Provisioning Cluster](./images/Jenkins%20-%20eksctl%20create%20cluster.png)
+
+Once the EKS cluster is ready, you can proceed to build and run your Jenkins pipeline job as described below. The pipeline will deploy your application to the newly created cluster using Helm.
+
+---
 
 #### 4.2 Configure Jenkins Pipeline for Helm Deployments
 
@@ -582,7 +630,7 @@ pipeline {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
                     sh """
                     aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $CLUSTER_NAME
-                    helm upgrade --install devopsdemo $CHART_DIR --set image.repository=franklynux/devopsdemo,image.tag=${BUILD_NUMBER}
+                    helm upgrade --install devopsdemo $CHART_DIR --set image.repository=franklynux/devopsdemo,image.tag=6
                     """
                 }
             }
@@ -647,11 +695,70 @@ pipeline {
    - On the job page, click **Build Now** to trigger the pipeline.
 
    > **Screenshot Placeholder:**  
-   > ![Jenkins Build Now](./images/jenkins-build-now.png)
+   > ![Jenkins Build Now](./images/Jenkins%20-%20Click%20Build%20now.png)
+
+   - Verify Pipeline was built successfully.
+    > **Screenshot Placeholder:**
+    > ![Jenkins Build Success](./images/Jenkins%20-%20Build%20successful.png)
+
 
 ---
 
-## 7. Troubleshooting
+## 7. Accessing the Deployed Application
+
+After deploying the application successfully on Jenkins using Helm, you can access it via the Load Balancer's DNS name. Follow these steps:
+
+1. **Get the Load Balancer's DNS Name:**
+
+   Run the following command to get the service details:
+
+   ```bash
+   kubectl get svc
+   ```
+
+   Look for the service named `devopsdemo` in the output. The `EXTERNAL-IP` or `LoadBalancer Ingress` field will show the DNS name of the Load Balancer. If the `EXTERNAL-IP` is still pending, wait a few minutes and run the command again.
+
+   ![Get Service](./images/Jenkins%20-%20loadbalancer%20dns%20name%20and%20port.png)
+
+2. **Access the Application:**
+
+   Open a web browser and enter the Load Balancer's DNS name in the address bar. You should see the sample web application running.
+
+   ![Sample Application](./images/Jenkins%20-%20app%20deployed%20and%20running%20succesfully.png)
+
+---
+
+## 8. Clean Up Resources
+
+After you have finished testing or demonstrating the deployment, it is good practice to clean up your AWS resources to avoid unnecessary charges.
+
+1. **Delete the EKS Cluster:**
+
+   Run the following command to delete the EKS cluster and all associated resources:
+
+   ```bash
+   eksctl delete cluster --name helm-app-cluster --region us-east-1
+   ```
+
+   > **Screenshot Placeholder:**
+   > ![Delete Kube Cluster using eksctl](./images/Jenkins%20-%20delete%20cluster%20(eksctl).png)
+
+   This will remove the EKS cluster, node groups, and related AWS resources.
+
+2. **Remove Unused Docker Images (Optional):**
+
+   If you built and pushed Docker images to a registry, consider removing them if no longer needed.
+
+3. **Delete Jenkins Server (Optional):**
+
+   If you created a dedicated Jenkins server for this project, terminate the EC2 instance when done. Ensure you have backed up any important data or configurations before deletion.
+
+   > **Screenshot Placeholder:**
+   > ![Terminate Jenkins EC2 instance](./images/Jenkins%20-%20terminate%20instance.png)
+
+---
+
+## 9. Troubleshooting
 
 ### Common Issues and Solutions
 
@@ -672,7 +779,7 @@ pipeline {
 
 ---
 
-## 8. Contributing
+## 10. Contributing
 
 We welcome contributions to this project! To contribute:
 
@@ -685,6 +792,14 @@ For major changes, please open an issue first to discuss what you would like to 
 
 ---
 
-## Contact
+## 11. License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## 12. Contact
 
 For questions or support, please contact the project maintainer.
+
+---
