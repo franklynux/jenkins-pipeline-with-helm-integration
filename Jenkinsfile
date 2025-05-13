@@ -57,7 +57,7 @@ pipeline {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
                     sh """
                     aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $CLUSTER_NAME
-                    helm upgrade --install devopsdemo $CHART_DIR --set image.repository=franklynux/devopsdemo,image.tag=${BUILD_NUMBER}
+                    helm upgrade --install devopsdemo $CHART_DIR
                     """
                 }
             }
