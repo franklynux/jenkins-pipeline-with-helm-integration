@@ -91,7 +91,7 @@ Configure Jenkins server for CI/CD pipeline automation.
   ```
 
   > **Screenshot Placeholder:**  
-  > ![Add Jenkins Key](./images/add-jenkins-key.png)
+  > ![Add Jenkins Key](./images/Jenkins%20-%20Key.png)
 
 - Add Jenkins repository:
 
@@ -102,7 +102,7 @@ Configure Jenkins server for CI/CD pipeline automation.
   ```  
 
   > **Screenshot Placeholder:**  
-  > ![Add Jenkins Repository](./images/add-jenkins-repo.png)
+  > ![Add Jenkins Repository](./images/Jenkins%20-%20add%20repo.png)
 
 - Install Jenkins and Java:
 
@@ -113,7 +113,7 @@ Configure Jenkins server for CI/CD pipeline automation.
   ```
 
   > **Screenshot Placeholder:**  
-  > ![Install Jenkins](./images/install-jenkins.png)
+  > ![Install Jenkins](./images/Jenkins%20-%20install%20Jenkins.png)
 
 - Start and enable Jenkins service:
 
@@ -123,12 +123,9 @@ Configure Jenkins server for CI/CD pipeline automation.
   ```
 
   > **Screenshot Placeholder:**  
-  > ![Jenkins Running](./images/Jenkins%20install%207%20(active%20running).png)
+  > ![Jenkins Running](./images/Jenkins%20-%20active%20(running).png)
 
 - Access Jenkins UI via `http://<your-server-ip>:8080`.
-
-  > **Screenshot Placeholder:**  
-  > ![Jenkins UI](./images/jenkins-ui.png)
 
 ### Initial Setup
 
@@ -413,6 +410,7 @@ Helm charts are highly customizable through the use of the `values.yaml` file an
   ```bash
   helm show values ./devopsdemo
   ```
+
   ![Show Values](./images/helm%20-%20show%20values%20%20(cmd).png)
 
   This command is helpful for discovering which parameters are available for customization, especially when using third-party charts.
@@ -659,8 +657,8 @@ pipeline {
 
 #### Issue: Jenkins Pipeline Fails to Deploy Helm Chart
 
-- **Cause**: Missing Kubernetes credentials in Jenkins.
-- **Solution**: Ensure Kubernetes credentials are configured in Jenkins under **Manage Jenkins > Credentials**.
+- **Cause**: Missing AWS credentials in Jenkins.
+- **Solution**: Ensure AWS credentials are configured in Jenkins under **Manage Jenkins > Credentials**.
 
 #### Issue: Helm Command Not Found
 
