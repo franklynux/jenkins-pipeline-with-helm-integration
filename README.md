@@ -30,7 +30,7 @@ Before starting, ensure you have the following installed:
 - **Operating System**: Windows, Linux, or macOS.
 
   *Note: This project would involve steps to create and deploy a helm chart on Kubernetes using EKS on both a local machine and on a dedicated Ubuntu (Linux) `t.3 small` EC2 instance for the Jenkins Server. The below tools are required to be installed and configured on both environments.*
-  
+
 - **Jenkins**: Version 2.375 or later
 - **Helm**: Version 3.0 or later
 - **AWS CLI**: Installed and configured
@@ -213,6 +213,8 @@ Configure Jenkins server for CI/CD pipeline automation.
    - Add credentials:
      - **Kind**: AWS Credentials
      - **ID**: aws-credentials
+     - **Access Key ID**: Your AWS Access Key ID
+     - **Secret Access Key**: Your AWS Secret Access Key
      - **Description**: AWS credentials for EKS access
 
    > **Screenshot Placeholder:**  
@@ -241,12 +243,6 @@ Configure Jenkins server for CI/CD pipeline automation.
 ---
 
 ## 4. Helm Chart Basics
-
-### Helm Chart Basics Objective
-
-Introduce the fundamental concepts of Helm charts.
-
-### Helm Chart Basics Steps
 
 ### What is Helm?
 
@@ -290,7 +286,7 @@ Imagine you need to deploy a web application with a backend service, a database,
 
 #### 2.2 Creating a Basic Helm Chart
 
-- Use the command:  
+- Initialize a new Helm chart using the `helm create` command:  
 
   ```bash
   helm create devopsdemo
