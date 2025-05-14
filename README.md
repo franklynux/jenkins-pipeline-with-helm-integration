@@ -62,9 +62,8 @@ jenkins-pipeline-with-helm-integration/
 │   │   ├── ingress.yaml
 │   │   ├── NOTES.txt
 │   │   ├── service.yaml
-│   │   ├── serviceaccount.yaml
-│   │   └── tests/
-│   │       └── test-connection.yaml
+│   │   └── serviceaccount.yaml
+│     
 ```
 
 ---
